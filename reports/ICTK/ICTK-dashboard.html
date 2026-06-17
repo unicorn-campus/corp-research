@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>아이씨티케이(ICTK) 기업 분析 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', 'Noto Sans KR', 'Segoe UI', sans-serif;
+      background: #F0F2F5;
+      color: #2C2926;
+      min-height: 100vh;
+    }
+
+    /* ===== 헤더 ===== */
+    .header {
+      background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+      color: #fff;
+      padding: 32px 40px;
+    }
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .company-name {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .company-sub {
+      font-size: 1rem;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+    .badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .info-item {
+      background: rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+    .info-label {
+      font-size: 0.72rem;
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    /* ===== 컨테이너 ===== */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* ===== 섹션 타이틀 ===== */
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #2C2926;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #059669;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      background: #059669;
+      border-radius: 2px;
+    }
+
+    /* ===== 카드 ===== */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+
+    /* ===== 차트 그리드 ===== */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+    .chart-wrapper {
+      position: relative;
+      height: 320px;
+    }
+
+    /* ===== KPI 스트립 ===== */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border-top: 4px solid #4472C4;
+    }
+    .kpi-card.green { border-top-color: #059669; }
+    .kpi-card.red   { border-top-color: #DC2626; }
+    .kpi-card.amber { border-top-color: #D97706; }
+    .kpi-card.purple{ border-top-color: #7C3AED; }
+    .kpi-label {
+      font-size: 0.75rem;
+      color: #59636E;
+      margin-bottom: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .kpi-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #2C2926;
+    }
+    .kpi-unit {
+      font-size: 0.8rem;
+      color: #6B6B7B;
+      margin-top: 2px;
+    }
+
+    /* ===== SWOT ===== */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 700px) {
+      .swot-grid { grid-template-columns: 1fr; }
+    }
+    .swot-card {
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .swot-card.strength { background: #EFF6FF; border-left: 5px solid #2563EB; }
+    .swot-card.weakness { background: #FEF2F2; border-left: 5px solid #DC2626; }
+    .swot-card.opportunity { background: #ECFDF5; border-left: 5px solid #059669; }
+    .swot-card.threat { background: #FFF7ED; border-left: 5px solid #EA580C; }
+    .swot-header {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .swot-card.strength .swot-header { color: #1D4ED8; }
+    .swot-card.weakness .swot-header { color: #B91C1C; }
+    .swot-card.opportunity .swot-header { color: #065F46; }
+    .swot-card.threat .swot-header { color: #C2410C; }
+    .swot-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .swot-card.strength .swot-icon { background: #DBEAFE; }
+    .swot-card.weakness .swot-icon { background: #FEE2E2; }
+    .swot-card.opportunity .swot-icon { background: #D1FAE5; }
+    .swot-card.threat .swot-icon { background: #FFEDD5; }
+    .swot-list {
+      list-style: none;
+      padding: 0;
+    }
+    .swot-list li {
+      font-size: 0.84rem;
+      color: #374151;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding-left: 14px;
+      position: relative;
+      line-height: 1.5;
+    }
+    .swot-list li:last-child { border-bottom: none; }
+    .swot-list li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      font-size: 0.7rem;
+      top: 6px;
+    }
+
+    /* ===== 뉴스 타임라인 ===== */
+    .news-list {
+      list-style: none;
+    }
+    .news-item {
+      display: flex;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid #F1F3F5;
+      align-items: flex-start;
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-date {
+      font-size: 0.75rem;
+      color: #fff;
+      background: #4472C4;
+      border-radius: 6px;
+      padding: 3px 8px;
+      white-space: nowrap;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .news-title {
+      font-size: 0.87rem;
+      color: #374151;
+      line-height: 1.5;
+    }
+    .news-source {
+      font-size: 0.72rem;
+      color: #9CA3AF;
+      margin-top: 2px;
+    }
+
+    /* ===== 재무지표 테이블 ===== */
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.87rem;
+    }
+    .metrics-table th {
+      background: #E2EEF9;
+      color: #2C2926;
+      font-weight: 700;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 2px solid #CBD5E1;
+    }
+    .metrics-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #F1F3F5;
+      color: #374151;
+    }
+    .metrics-table tr:hover td { background: #F8FAFC; }
+    .neg { color: #DC2626; font-weight: 600; }
+    .pos { color: #059669; font-weight: 600; }
+
+    /* ===== 주주 섹션 ===== */
+    .shareholder-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 700px) {
+      .shareholder-grid { grid-template-columns: 1fr; }
+    }
+    .shareholder-list {
+      list-style: none;
+    }
+    .shareholder-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #F1F3F5;
+      font-size: 0.87rem;
+    }
+    .shareholder-item:last-child { border-bottom: none; }
+    .shareholder-name { color: #374151; font-weight: 500; }
+    .shareholder-role { color: #9CA3AF; font-size: 0.77rem; margin-top: 1px; }
+    .shareholder-pct {
+      font-weight: 700;
+      color: #2563EB;
+      font-size: 0.95rem;
+    }
+
+    /* ===== 총평 박스 ===== */
+    .summary-box {
+      background: linear-gradient(135deg, #CCFBF1 0%, #D1FAE5 100%);
+      border-left: 5px solid #059669;
+      border-radius: 10px;
+      padding: 18px 22px;
+      font-size: 0.95rem;
+      color: #065F46;
+      font-weight: 600;
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    /* ===== 푸터 ===== */
+    .footer {
+      text-align: center;
+      padding: 24px;
+      color: #9CA3AF;
+      font-size: 0.78rem;
+      border-top: 1px solid #E2E8F0;
+      margin-top: 8px;
+    }
+
+    /* ===== 행 레이아웃 ===== */
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) {
+      .row { grid-template-columns: 1fr; }
+    }
+    .full-row {
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== 헤더 ===== -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="company-name">아이씨티케이 (ICTK)</div>
+      <div class="company-sub">ICTK Co., Ltd. · 종목코드 456010 (코스닥)</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="badge">PUF 보안반도체</span>
+      <span class="badge">기술특례 상장</span>
+    </div>
+  </div>
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="info-label">대표이사</div>
+      <div class="info-value">이정원</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">설립일</div>
+      <div class="info-value">2017. 10. 18</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">상장일</div>
+      <div class="info-value">2024. 05 (코스닥)</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">공모가</div>
+      <div class="info-value">13,000원</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">업종</div>
+      <div class="info-value">반도체 및 전자부품</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">임직원 수 (2024)</div>
+      <div class="info-value">62명</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">주요 특허</div>
+      <div class="info-value">150개 이상 (국제)</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">소재지</div>
+      <div class="info-value">서울 강남구</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 메인 컨테이너 ===== -->
+<div class="container">
+
+  <!-- KPI 스트립 -->
+  <div class="kpi-strip">
+    <div class="kpi-card green">
+      <div class="kpi-label">2024 매출액</div>
+      <div class="kpi-value">67억</div>
+      <div class="kpi-unit">+8.0% YoY</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">2024 영업손실</div>
+      <div class="kpi-value">△67억</div>
+      <div class="kpi-unit">영업이익률 △99.9%</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">누적 결손금</div>
+      <div class="kpi-value">382억</div>
+      <div class="kpi-unit">2024년 말 기준</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">부채비율</div>
+      <div class="kpi-value">6.47%</div>
+      <div class="kpi-unit">안정적 (IPO 후)</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">유동비율</div>
+      <div class="kpi-value">2,988%</div>
+      <div class="kpi-unit">단기 유동성 풍부</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">자기자본비율</div>
+      <div class="kpi-value">93.9%</div>
+      <div class="kpi-unit">2024년 말</div>
+    </div>
+  </div>
+
+  <!-- 차트 2열 -->
+  <div class="charts-grid full-row">
+    <div class="card">
+      <div class="section-title">재무 추이 (3개년)</div>
+      <div class="chart-wrapper">
+        <canvas id="financialChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">주주 구성 현황</div>
+      <div class="chart-wrapper">
+        <canvas id="shareholderChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 재무지표 테이블 + 뉴스 -->
+  <div class="row">
+    <div class="card">
+      <div class="section-title">주요 재무지표</div>
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>지표</th>
+            <th>2024년</th>
+            <th>2023년</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>매출총이익률</td><td class="pos">45.04%</td><td class="pos">54.36%</td></tr>
+          <tr><td>영업이익률</td><td class="neg">△99.9%</td><td class="neg">△38.22%</td></tr>
+          <tr><td>순이익률</td><td class="neg">△87.05%</td><td class="neg">△145.95%</td></tr>
+          <tr><td>ROA</td><td class="neg">△23.79%</td><td class="neg">△23.35%</td></tr>
+          <tr><td>부채비율</td><td class="pos">6.47%</td><td class="pos">10.68%</td></tr>
+          <tr><td>유동비율</td><td class="pos">2,988.12%</td><td class="pos">1,008.65%</td></tr>
+          <tr><td>자기자본비율</td><td class="pos">93.93%</td><td class="pos">90.35%</td></tr>
+          <tr><td>매출액증가율</td><td class="pos">+8.02%</td><td class="pos">+141.05%</td></tr>
+          <tr><td>총자산증가율</td><td class="pos">+339.77%</td><td>+5.81%</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.72rem;color:#9CA3AF;margin-top:10px;">출처: DART 전자공시 (개별 기준)</p>
+    </div>
+
+    <div class="card">
+      <div class="section-title">최신 뉴스·이슈</div>
+      <ul class="news-list">
+        <li class="news-item">
+          <div>
+            <div class="news-date">2026.06</div>
+          </div>
+          <div>
+            <div class="news-title">70억 산업부 양자보안 칩 국책과제 주관기관 선정 (KT 수요기업)</div>
+            <div class="news-source">이데일리·지디넷코리아</div>
+          </div>
+        </li>
+        <li class="news-item">
+          <div><div class="news-date">2026.05</div></div>
+          <div>
+            <div class="news-title">MS Xbox 보안칩 'STR' 초도 납품 (4년 프로젝트 완성)</div>
+            <div class="news-source">프라임경제</div>
+          </div>
+        </li>
+        <li class="news-item">
+          <div><div class="news-date">2026.05</div></div>
+          <div>
+            <div class="news-title">WIPO 글로벌 어워드 2026 파이널리스트 2년 연속 선정</div>
+            <div class="news-source">프라임경제</div>
+          </div>
+        </li>
+        <li class="news-item">
+          <div><div class="news-date">2026.02</div></div>
+          <div>
+            <div class="news-title">LG유플러스 PQC KMS 솔루션 공동개발 완료</div>
+            <div class="news-source">데일리한국</div>
+          </div>
+        </li>
+        <li class="news-item">
+          <div><div class="news-date">2025.09</div></div>
+          <div>
+            <div class="news-title">SKT 해킹 파문 속 망 보안 대안으로 부각</div>
+            <div class="news-source">뉴스핌</div>
+          </div>
+        </li>
+        <li class="news-item">
+          <div><div class="news-date">2025.05</div></div>
+          <div>
+            <div class="news-title">210억 전환사채(CB) 발행 (M&A·PQC 표준화 재원)</div>
+            <div class="news-source">더벨·현대경제신문</div>
+          </div>
+        </li>
+        <li class="news-item">
+          <div><div class="news-date">2025.04</div></div>
+          <div>
+            <div class="news-title">PQC PUF-eSIM 세계 최초 상용화 (LG유플러스 협력)</div>
+            <div class="news-source">컨슈머타임스</div>
+          </div>
+        </li>
+        <li class="news-item">
+          <div><div class="news-date">2024.05</div></div>
+          <div>
+            <div class="news-title">코스닥 기술특례 상장 (공모가 13,000원)</div>
+            <div class="news-source">아이뉴스24</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 주주 현황 -->
+  <div class="full-row">
+    <div class="card">
+      <div class="section-title">주주·임원 현황 (2024 사업보고서)</div>
+      <div class="shareholder-grid">
+        <div>
+          <p style="font-size:0.8rem;font-weight:700;color:#59636E;margin-bottom:10px;">최대주주 그룹 (총 27.6%)</p>
+          <ul class="shareholder-list">
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">이정원</div><div class="shareholder-role">최대주주 · 대표이사</div></div>
+              <div class="shareholder-pct">12.60%</div>
+            </li>
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">김동현</div><div class="shareholder-role">미등기임원</div></div>
+              <div class="shareholder-pct">5.50%</div>
+            </li>
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">유승삼</div><div class="shareholder-role">등기임원 · 부회장</div></div>
+              <div class="shareholder-pct">3.50%</div>
+            </li>
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">진봉재</div><div class="shareholder-role">관계사 등기임원</div></div>
+              <div class="shareholder-pct">3.00%</div>
+            </li>
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">김동규 · 최병덕</div><div class="shareholder-role">기술고문</div></div>
+              <div class="shareholder-pct">각 1.50%</div>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-size:0.8rem;font-weight:700;color:#59636E;margin-bottom:10px;">주요 임원</p>
+          <ul class="shareholder-list">
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">이정원</div><div class="shareholder-role">대표이사(사내이사)</div></div>
+              <div style="font-size:0.8rem;color:#059669;font-weight:600;">경영총괄</div>
+            </li>
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">유승삼</div><div class="shareholder-role">부회장(사내이사)</div></div>
+              <div style="font-size:0.8rem;color:#059669;font-weight:600;">경영고문</div>
+            </li>
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">강봉호</div><div class="shareholder-role">전무이사(미등기)</div></div>
+              <div style="font-size:0.8rem;color:#4472C4;font-weight:600;">CTO</div>
+            </li>
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">이경택</div><div class="shareholder-role">전무이사(미등기)</div></div>
+              <div style="font-size:0.8rem;color:#4472C4;font-weight:600;">CSO</div>
+            </li>
+            <li class="shareholder-item">
+              <div><div class="shareholder-name">박윤배</div><div class="shareholder-role">이사(미등기)</div></div>
+              <div style="font-size:0.8rem;color:#D97706;font-weight:600;">CFO</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SWOT -->
+  <div class="full-row">
+    <div class="card">
+      <div class="section-title">SWOT 종합 評價</div>
+      <div class="swot-grid">
+        <div class="swot-card strength">
+          <div class="swot-header">
+            <div class="swot-icon">💪</div>
+            강점 (Strengths)
+          </div>
+          <ul class="swot-list">
+            <li>VIA PUF™ 세계 최초 상용화 + 150개 이상 국제 특허 보유</li>
+            <li>글로벌 빅테크(MS) 밸류체인 진입 및 통신사(LG유플·KT) 레퍼런스</li>
+            <li>IPO 후 재무 안정화: 부채비율 6.47%, 유동비율 2,988%</li>
+          </ul>
+        </div>
+        <div class="swot-card weakness">
+          <div class="swot-header">
+            <div class="swot-icon">⚠️</div>
+            약점 (Weaknesses)
+          </div>
+          <ul class="swot-list">
+            <li>지속 영업손실 (2024 영업이익률 △100%, 누적 결손금 382억)</li>
+            <li>매출 성장 둔화: 2023년 +141% → 2024년 +8%</li>
+            <li>과도한 CB 발행으로 주주 희석 리스크</li>
+          </ul>
+        </div>
+        <div class="swot-card opportunity">
+          <div class="swot-header">
+            <div class="swot-icon">🚀</div>
+            기회 (Opportunities)
+          </div>
+          <ul class="swot-list">
+            <li>SKT 해킹 이후 하드웨어 보안 수요 급증 및 정책 규제 강화</li>
+            <li>양자컴퓨터 위협 가속 → PQC+PUF 수요 폭발 전망</li>
+            <li>MS 납품 본격화 및 통신사 커버리지 확대</li>
+          </ul>
+        </div>
+        <div class="swot-card threat">
+          <div class="swot-header">
+            <div class="swot-icon">🛡️</div>
+            위협 (Threats)
+          </div>
+          <ul class="swot-list">
+            <li>글로벌 대기업(Infineon·NXP) 대비 규모·자원 열위</li>
+            <li>CB 전환 지속에 따른 주가 희석 압력</li>
+            <li>적자 지속 시 자금 조달 어려움 및 R&D 투자 제약</li>
+          </ul>
+        </div>
+      </div>
+      <div class="summary-box">
+        한 줄 총평: PUF 기술 독보성과 글로벌 레퍼런스는 확보했으나, 수익화 속도가 관건인 기술특례 스타트업 단계 기업.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  데이터 기준일: 2026-06-17 &nbsp;|&nbsp; 출처: DART 전자공시, 이데일리, 지디넷코리아, 프라임경제 외
+</div>
+
+<!-- ===== Chart.js ===== -->
+<script>
+  /* 재무 추이 Bar Chart */
+  const financialCtx = document.getElementById('financialChart').getContext('2d');
+  new Chart(financialCtx, {
+    type: 'bar',
+    data: {
+      labels: ['2022', '2023', '2024'],
+      datasets: [
+        {
+          label: '매출액',
+          data: [26, 62, 67],
+          backgroundColor: '#4472C4',
+          borderRadius: 5,
+          borderSkipped: false,
+        },
+        {
+          label: '영업이익(손실)',
+          data: [-33, -24, -67],
+          backgroundColor: '#DC2626',
+          borderRadius: 5,
+          borderSkipped: false,
+        },
+        {
+          label: '당기순이익(손실)',
+          data: [-108, -90, -58],
+          backgroundColor: '#F97316',
+          borderRadius: 5,
+          borderSkipped: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { font: { size: 12 }, padding: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}억원`
+          }
+        }
+      },
+      scales: {
+        y: {
+          grid: { color: '#F1F3F5' },
+          ticks: {
+            callback: v => v + '억',
+            font: { size: 11 }
+          }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 12 } }
+        }
+      }
+    }
+  });
+
+  /* 주주 구성 Doughnut */
+  const shareholderCtx = document.getElementById('shareholderChart').getContext('2d');
+  new Chart(shareholderCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['이정원 (12.6%)', '김동현 (5.5%)', '유승삼 (3.5%)', '진봉재 (3.0%)', '기타 고문 (3.0%)', '기타 주주 (72.4%)'],
+      datasets: [{
+        data: [12.6, 5.5, 3.5, 3.0, 3.0, 72.4],
+        backgroundColor: ['#2563EB', '#0284C7', '#059669', '#D97706', '#7C3AED', '#E2E8F0'],
+        borderColor: '#ffffff',
+        borderWidth: 3,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { size: 11 },
+            padding: 10,
+            usePointStyle: true,
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.parsed}%`
+          }
+        }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

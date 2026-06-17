@@ -1,0 +1,8 @@
+# 임시 파일
+.temp/
+
+# 로컬 세션/상태
+.omc/
+
+# Node.js
+node_modules/
