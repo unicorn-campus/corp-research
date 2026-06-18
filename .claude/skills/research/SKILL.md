@@ -1,6 +1,6 @@
 ---
 name: research
-description: 기업명을 입력받아 OpenDART 공시 데이터·웹 검색을 병렬로 수집하고, 기업 분석 레포트·HTML 대시보드·PPT 슬라이드를 생성하는 단일 기업 심층 분석 스킬
+description: 기업명을 입력받아 OpenDART 공시 데이터·웹 검색을 병렬로 수집하고, 기업 분析 레포트·HTML 대시보드·PPT 슬라이드를 생성하는 단일 기업 심층 분析 스킬
 triggers:
   - research
   - 기업리서치
@@ -11,38 +11,36 @@ triggers:
 argument-hint: "[기업명]"
 ---
 
-# Research — 단일 기업 심층 분석 스킬
-
-## 목적
-
-투자 검토·사업 제휴·경쟁사 분석 등 의사결정을 위해 단일 기업의 공시 데이터와 시장 정보를  
-수집·분석하여 레포트(MD)·HTML 대시보드·PPT 슬라이드를 생성함.
+# Research — 단일 기업 심층 분析 스킬
 
 ## 팀 역할 분담
 
-| 역할 | 닉네임 | 담당 Phase |
-|------|--------|------------|
-| 오케스트레이터 | 클로니 | Phase 1·2·5 (기획·조율·통합) |
-| 재무 분석가 | 다트 | Phase 3-A (OpenDART 공시 데이터 수집) |
-| 시장 조사원 | 서치 | Phase 3-B (WebSearch 시장·경쟁·뉴스 수집) |
-| 결과물 작성가 | 라이터 | Phase 4 (레포트·HTML·PPT 생성) |
+| 역할 | 닉네임 | 담당 Phase | 에이전트 파일 |
+|------|--------|------------|-------------|
+| 오케스트레이터 | 클로니 | Phase 1·2·5 (기획·조율·통합) | 메인 (직접 수행) |
+| 재무 分析가 | 다트 | Phase 3-A (OpenDART 공시 데이터 수집) | `.claude/agents/dart-analyst.md` |
+| 시장 조사원 | 서치 | Phase 3-B (WebSearch 시장·경쟁·뉴스 수집) | `.claude/agents/market-researcher.md` |
+| 결과물 작성가 | 라이터 | Phase 4 (레포트·HTML·PPT 생성) | `.claude/agents/report-writer.md` |
+
+> **에이전트 호출 방식**: 각 서브에이전트 호출 시 `.claude/agents/{agent-name}.md` 파일을 읽어  
+> 해당 파일의 시스템 프롬프트(frontmatter 이후 내용)를 Agent 도구의 프롬프트에 포함하여 호출.
 
 ---
 
-## Phase 1. 입력 수집 `[클로니]`
+## Phase 1. 입력 수집 `[클로니 — 직접 수행]`
 
-AskUserQuestion 도구로 아래 정보를 수집함:
+AskUserQuestion 도구로 아래 정보를 수집:
 
 **필수**
 - `{기업명}`: 분析할 기업명
 
 **선택** (미입력 시 기본값 적용)
-- `{활용목적}`: 분석 목적 (예: 투자검토, 경쟁사분석, 사업제휴) → 기본값: "일반조사"
+- `{활용목적}`: 분析 목적 (예: 투자검토, 경쟁사분析, 사업제휴) → 기본값: "일반조사"
 - `{검색기간}`: 웹 서치 범위 → 기본값: "최근 2년"
 
 ---
 
-## Phase 2. 기업 확인 및 아젠다 수립 `[클로니 + 다트]`
+## Phase 2. 기업 확인 및 아젠다 수립 `[클로니 — 직접 수행]`
 
 ### 2-1. 기업 확인
 
@@ -71,129 +69,104 @@ AskUserQuestion 도구로 아래 정보를 수집함:
 
 ---
 
-## Phase 3. 병렬 데이터 수집 `[다트 + 서치 동시 실행]`
+## Phase 3. 병렬 데이터 수집 `[다트 + 서치 — 단일 응답에서 동시 Agent 호출]`
 
-> **핵심 규칙**: 3-A(다트)와 3-B(서치) Agent 호출을 **단일 응답에서 동시에** 실행할 것.
+> **핵심 규칙**: Phase 3-A와 Phase 3-B의 Agent 호출을 **단일 응답에서 동시에** 실행.
 
-### Phase 3-A. OpenDART 데이터 수집 `[다트]`
+### Agent 호출 준비
 
-승인된 아젠다의 OpenDART 담당 섹션에 따라 수집:
+먼저 두 에이전트 파일을 읽어 시스템 프롬프트 확보:
+- `Read .claude/agents/dart-analyst.md` → `{dart_system_prompt}` (frontmatter `---` 이후 전체)
+- `Read .claude/agents/market-researcher.md` → `{search_system_prompt}` (frontmatter `---` 이후 전체)
 
-| 섹션 | 사용 도구 |
-|------|----------|
-| 기업 개요 | `opendart-get_company_info`, `opendart-get_employees` |
-| 재무 分析 | `opendart-get_full_financial_statement`, `opendart-get_financial_index` |
-| 주주·임원 | `opendart-get_largest_shareholders`, `opendart-get_executives`, `opendart-get_executive_stock` |
-| 공시 동향 | `opendart-search_disclosures` |
-| 배당 정보 (옵션) | `opendart-get_dividend_info` |
+### Phase 3-A. OpenDART 데이터 수집 `[다트 서브에이전트]`
 
-작성 규칙:
-- 모든 수치는 "(출처: DART 전자공시, YYYY년 N분기)" 형식으로 병기
-- 재무 수치는 억원 단위 표기, 표 형식 활용
-- 추정치는 "(추정)" 명시, 출처 불명확 수치는 "정확한 수치 확인 필요" 표기
+Agent 도구 호출 (단일 응답에서 3-B와 동시 실행):
 
-### Phase 3-B. 웹 검색 수집 `[서치]`
+```
+prompt: |
+  {dart_system_prompt의 전체 내용}
 
-승인된 아젠다의 WebSearch 담당 섹션에 따라 수집:
+  ---
+  [현재 작업]
 
-| 섹션 | 검색 키워드 |
-|------|-----------|
-| 시장 포지션 | `{기업명} 시장점유율`, `{기업명} 경쟁사 비교` |
-| 경쟁 환경 | `{기업명} 산업 트렌드 {검색기간}` |
-| 최신 뉴스 | `{기업명} 최근 뉴스`, `{기업명} 이슈 {검색기간}` |
+  [목표]
+  {기업명}({corp_code})의 OpenDART 공시 데이터를 수집하여 구조화된 마크다운으로 반환
 
-작성 규칙:
-- 검색 결과마다 출처명·URL·날짜 병기
-- 신뢰도 낮은 정보는 "(미확인)" 표기
+  [입력정보]
+  - 기업명: {기업명}
+  - corp_code: {corp_code}
+  - 아젠다 섹션: {승인된 아젠다 중 OpenDART 담당 섹션 목록}
+```
+
+반환값 → `{dart_data}` 변수에 저장
+
+### Phase 3-B. 웹 검색 수집 `[서치 서브에이전트]`
+
+Agent 도구 호출 (단일 응답에서 3-A와 동시 실행):
+
+```
+prompt: |
+  {search_system_prompt의 전체 내용}
+
+  ---
+  [현재 작업]
+
+  [목표]
+  {기업명}의 시장 포지션·경쟁 환경·최신 뉴스를 웹 검색으로 수집하여 구조화된 마크다운으로 반환
+
+  [입력정보]
+  - 기업명: {기업명}
+  - 검색기간: {검색기간}
+  - 아젠다 섹션: {승인된 아젠다 중 WebSearch 담당 섹션 목록}
+```
+
+반환값 → `{search_data}` 변수에 저장
 
 ---
 
-## Phase 4. 결과물 생성 `[라이터]`
+## Phase 4. 결과물 생성 `[라이터 서브에이전트]`
 
-`{OUTPUT_DIR}` = `reports/{기업명}/`
+먼저 에이전트 파일 읽기:
+- `Read .claude/agents/report-writer.md` → `{writer_system_prompt}` (frontmatter `---` 이후 전체)
 
-### 4-1. 레포트 작성
-
-수집된 데이터를 아젠다 순서대로 마크다운 레포트 작성:
+Phase 3 완료 후 Agent 도구로 report-writer 호출:
 
 ```
-## 1. 기업 개요
-(업종, 대표자, 설립일, 직원수 — 표 형식)
+prompt: |
+  {writer_system_prompt의 전체 내용}
 
-## 2. 재무 分析
-(최근 3개년 매출액·영업이익·당기순이익 — 표 형식)
+  ---
+  [현재 작업]
 
-## 3. 주주·임원 현황
-(최대주주·지분율·주요 임원 — 표 형식)
+  [목표]
+  {기업명} 기업 분析 결과물 3종 생성:
+  마크다운 레포트, Chart.js HTML 대시보드, pptxgenjs PPT 슬라이드
 
-## 4. 최근 공시 동향
-(주요 공시 3~5건 요약)
+  [입력정보]
+  - 기업명: {기업명}
+  - 활용목적: {활용목적}
+  - 검색기간: {검색기간}
+  - 조사일: {조사일 — 오늘 날짜}
+  - OUTPUT_DIR: reports/{기업명}/
 
-## 5. 시장 포지션·경쟁 환경
-(시장 내 위치, 경쟁사 비교)
+  <dart_data>
+  {dart_data — Phase 3-A에서 반환된 전체 마크다운 텍스트}
+  </dart_data>
 
-## 6. 최신 뉴스·이슈
-(최근 뉴스 3~5건 요약, 출처 링크 포함)
-
-## 7. 종합 평가 (SWOT)
-(강점·약점·기회·위협 각 2~3개 + 한 줄 총평)
-
----
-※ OpenDART 데이터는 금감원 전자공시 기준이며, 최신 공시 반영 시점에 따라 차이가 있을 수 있음.
+  <search_data>
+  {search_data — Phase 3-B에서 반환된 전체 마크다운 텍스트}
+  </search_data>
 ```
-
-출력 파일: `{OUTPUT_DIR}/{기업명}-report.md`
-
-### 4-2. HTML 대시보드 생성
-
-Chart.js CDN 기반 단일 HTML 파일 생성:
-
-- **재무 추이 Bar Chart**: 최근 3개년 매출액·영업이익·당기순이익
-- **주주 구성 Doughnut Chart**: 최대주주·기관·외국인·기타 지분율
-- **SWOT 요약 카드**: 강점·약점·기회·위협 컬러 카드 레이아웃
-- 페이지 상단: 기업명·업종·대표자 등 기업 개요 요약
-- 반응형 레이아웃 적용
-
-생성 규칙:
-- 외부 파일 의존 없이 Chart.js CDN만 사용하여 단일 파일로 완결
-- `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>` CDN 사용
-
-출력 파일: `{OUTPUT_DIR}/{기업명}-dashboard.html`
-
-### 4-3. PPT 슬라이드 생성
-- PPT 슬라이드의 내용 이해를 위한 이미지를 gpt-image-mcp 를 이용하여 생성 
-  - 장식적인 이미지는 지양 
-  - 내용 이해를 돕는 인포그래픽 위주로 생성
-  - 생성된 이미지는 PPT 슬라이드에 삽입하여 활용 
-- `references/pptx-guide.md` 스타일 가이드 준수하여 pptxgenjs 기반 빌드 스크립트 작성:
-
-**슬라이드 구성 (4장)**
-
-| 슬라이드 | 내용 | 패턴 |
-|---------|------|------|
-| 1 | 표지 — 기업명·조사일·"기업 분析 레포트" 제목 | 표지 |
-| 2 | 기업 개요 + 재무 分析 (기본정보 표 + 재무지표 표) | 패턴 D: 테이블 |
-| 3 | 시장 포지션 + 경쟁 환경 | 패턴 B: 다이어그램 2열 |
-| 4 | SWOT 종합 평가 (4개 카드 + 총평) | 패턴 A: 카드 그리드 2×2 |
-
-빌드 스크립트 규칙:
-- `pptx.defineLayout({ name: "CUSTOM", width: 16, height: 9 })` 사용
-- 최소 폰트 크기 12pt 이상 (fs12 헬퍼 함수 경유)
-- 폰트: Pretendard 통일
-- 도형: `pptx.shapes.*` 상수만 사용
-- 테이블: `slide.addTable()` 사용 (셀 수동 그리기 금지)
-- 각 슬라이드는 `async function createSlideXX(pptx)` 패턴으로 분리
-
-빌드 실행: `node {OUTPUT_DIR}/{기업명}-build.js`
-
-출력 파일: `{OUTPUT_DIR}/{기업명}-report.pptx`
 
 ---
 
-## Phase 5. 완료 보고 `[클로니]`
+## Phase 5. 완료 보고 `[클로니 — 직접 수행]`
+
+report-writer 에이전트 반환값 확인 후 사용자에게 보고:
 
 ```
-[분析 완료]
+[分析 완료]
 
 ■ 기업명: {기업명}
 ■ 활용목적: {활용목적}
@@ -217,7 +190,7 @@ Chart.js CDN 기반 단일 HTML 파일 생성:
 | 항목 | 필수 | 기본값 | 설명 |
 |------|------|--------|------|
 | 기업명 | 필수 | — | OpenDART 검색 가능한 기업명 |
-| 활용목적 | 선택 | 일반조사 | 투자검토·경쟁사분析·사업제휴 등 |
+| 활용목적 | 선택 | 일반조사 | 투자검토·경쟁사分析·사업제휴 등 |
 | 검색기간 | 선택 | 최근 2년 | WebSearch 수집 범위 |
 
 ---
@@ -226,7 +199,7 @@ Chart.js CDN 기반 단일 HTML 파일 생성:
 
 | 산출물 | 경로 |
 |--------|------|
-| 기업 분析 레포트 (MD) | `reports/{기업명}/{기업명}-report.md` |
+| 기업 分析 레포트 (MD) | `reports/{기업명}/{기업명}-report.md` |
 | HTML 대시보드 | `reports/{기업명}/{기업명}-dashboard.html` |
 | PPT 슬라이드 | `reports/{기업명}/{기업명}-report.pptx` |
 
@@ -235,21 +208,24 @@ Chart.js CDN 기반 단일 HTML 파일 생성:
 ## 제약조건
 
 ### MUST
-- OpenDART MCP로 재무제표·기업정보를 1개 이상 실제 조회 후 인용
-- 아젠다 사용자 승인 전까지 본격 데이터 수집 시작 금지
+- Phase 3 Agent 호출 전 `.claude/agents/` 해당 파일을 Read하여 시스템 프롬프트 확보
 - Phase 3-A(다트)와 Phase 3-B(서치)는 단일 응답에서 동시 실행
-- WebSearch 결과는 출처 URL 반드시 병기
+- dart-analyst 에이전트는 OpenDART MCP로 실제 데이터 조회 후 반환
+- market-researcher 에이전트는 WebSearch 결과에 출처 URL 반드시 병기
 - HTML 파일은 Chart.js CDN만 사용하여 단일 파일로 완결
 - PPT 생성은 `references/pptx-guide.md` 준수
+- report-writer에 dart_data·search_data 전달 시 XML 태그(`<dart_data>`, `<search_data>`) 사용
+- 아젠다 사용자 승인 전까지 Phase 3 시작 금지
 
 ### MUST NOT
+- 메인 에이전트(클로니)가 Phase 3·4 작업 직접 수행 금지 (사용자 인터랙션 제외)
 - MCP 조회 없이 기억·추론만으로 재무 수치 작성 금지
 - 출처 불명확한 수치 단독 사용 금지
 - `anthropic-skills:pptx` 등 외부 변환 스킬 사용 금지
-- 사용자 승인 없이 아젠다 임의 확정 금지
 
 ### 완료조건
-- [ ] 승인된 아젠다의 모든 섹션이 데이터와 함께 레포트에 출력됨
+- [ ] dart-analyst 에이전트가 OpenDART 데이터를 반환함 (응답 텍스트 존재)
+- [ ] market-researcher 에이전트가 웹 검색 데이터를 반환함 (응답 텍스트 존재)
 - [ ] `reports/{기업명}/{기업명}-report.md` 파일 생성 확인
-- [ ] `reports/{기업명}/{기업명}-dashboard.html` 파일 생성 및 브라우저 정상 표시 확인
+- [ ] `reports/{기업명}/{기업명}-dashboard.html` 파일 생성 및 Chart.js 포함 확인
 - [ ] `reports/{기업명}/{기업명}-report.pptx` 파일 생성 및 0바이트 초과 확인

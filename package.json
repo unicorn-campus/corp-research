@@ -1,0 +1,23 @@
+{
+  "name": "corp-research",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unicorn-campus/corp-research.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/unicorn-campus/corp-research/issues"
+  },
+  "homepage": "https://github.com/unicorn-campus/corp-research#readme",
+  "description": "",
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}
