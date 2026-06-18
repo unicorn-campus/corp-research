@@ -161,8 +161,11 @@ Chart.js CDN 기반 단일 HTML 파일 생성:
 출력 파일: `{OUTPUT_DIR}/{기업명}-dashboard.html`
 
 ### 4-3. PPT 슬라이드 생성
-
-`references/pptx-guide.md` 스타일 가이드 준수하여 pptxgenjs 기반 빌드 스크립트 작성:
+- PPT 슬라이드의 내용 이해를 위한 이미지를 gpt-image-mcp 를 이용하여 생성 
+  - 장식적인 이미지는 지양 
+  - 내용 이해를 돕는 인포그래픽 위주로 생성
+  - 생성된 이미지는 PPT 슬라이드에 삽입하여 활용 
+- `references/pptx-guide.md` 스타일 가이드 준수하여 pptxgenjs 기반 빌드 스크립트 작성:
 
 **슬라이드 구성 (4장)**
 
