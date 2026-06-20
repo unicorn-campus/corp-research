@@ -2,12 +2,14 @@
 // .claude/hooks/mask-pii.mjs  —  corp-research
 // UserPromptSubmit 훅: 사용자 프롬프트에서 신용카드 번호 / 주민등록번호 패턴을 감지하면 제출을 차단함.
 //
-// 배경: Claude Code의 UserPromptSubmit 훅은 프롬프트 원문을 그 자리에서 수정(in-place 마스킹)하는
-//       기능을 지원하지 않음(updatedPrompt 미지원). 따라서 원문이 모델·트랜스크립트에 전달되지 않도록
-//       '차단(decision: block)' 방식으로 보호하며, 차단 사유에는 마스킹된 미리보기만 노출함(원문 미노출).
+// 배경: Claude Code의 UserPromptSubmit 훅은 프롬프트 원문 수정(in-place 마스킹)을 지원하지 않음.
+//       원문이 모델·트랜스크립트에 전달되지 않도록 '차단(decision: block)' 방식으로 보호.
+//       Claude Code Desktop 새 세션에서 block reason UI가 표시되지 않으므로 OS 알림으로 보완.
+//         - Windows: PowerShell WScript.Shell.Popup (8초 자동 닫힘)
+//         - macOS:   osascript display notification (토스트)
 //
 // 동작:
-//   - 감지됨  → stdout 으로 {"decision":"block","reason":...} 출력(원문 폐기, 사용자에게 재입력 안내)
+//   - 감지됨  → OS 알림 표시 후 {"decision":"block","reason":...} 출력
 //   - 깨끗함  → 아무 출력 없이 exit 0 (프롬프트 정상 통과)
 //   - 내부오류 → fail-open(exit 0). 스크립트 버그로 정상 작업 흐름을 막지 않음.
 import { readFileSync } from 'node:fs';
@@ -72,21 +74,22 @@ function main() {
     '(예: 신용카드 **** **** **** 1234 / 주민번호 900101-1******)',
   ].join('\n');
 
-  // 데스크톱 앱은 block reason을 UI에 렌더링하지 않으므로 OS 알림으로 보완
+  // OS 알림: Claude Code Desktop 새 세션에서 block reason UI 미표시 보완
   try {
     const title = 'Claude 보안 알림';
     const body = `민감정보 감지로 전송이 차단되었습니다.\n${items.join('\n')}\n마스킹 후 다시 보내주세요.`;
-    if (process.platform === 'darwin') {
-      const escaped = body.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-      execFileSync('osascript', ['-e', `display notification "${escaped}" with title "${title}"`],
-        { stdio: 'ignore', timeout: 3000 });
-    } else if (process.platform === 'win32') {
+    if (process.platform === 'win32') {
       const safe = body.replace(/'/g, '`');
       execFileSync('powershell', ['-NonInteractive', '-Command',
         `$wsh = New-Object -ComObject WScript.Shell; $wsh.Popup('${safe}', 8, '${title}', 48)`],
-        { stdio: 'ignore', timeout: 3000 });
+        { stdio: 'ignore', timeout: 10000 });
+    } else if (process.platform === 'darwin') {
+      const escaped = body.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      execFileSync('osascript', ['-e',
+        `display notification "${escaped}" with title "${title}" sound name "Basso"`],
+        { stdio: 'ignore', timeout: 5000 });
     }
-  } catch { /* fail-open */ }
+  } catch { /* fail-open: 알림 실패해도 차단은 유지 */ }
 
   process.stdout.write(JSON.stringify({ decision: 'block', reason, systemMessage: reason }));
   process.exit(0);

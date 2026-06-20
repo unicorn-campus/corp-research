@@ -141,6 +141,17 @@
 - [MED] 프롬프트에 임베딩되는 긴 텍스트는 XML 태그(`<태그명>...</태그명>`) 형식으로 감쌀 것  
   — AI가 지시문과 입력 데이터를 명확히 구분, 혼용 오류 방지. 출처: 1회차/프롬프트예제
 
+- [HIGH] 플러그인 훅은 `hooks/hooks.json`이 아닌 **`plugin.json`의 `hooks` 필드**에 정의해야 함  
+  — `hooks/hooks.json`은 Desktop `--setting-sources user` 모드에서 로딩 안 됨(GitHub issue #27398, 수정 계획 없음).  
+  `plugin.json` hooks 필드는 user scope에서도 정상 로딩되며 `${CLAUDE_PLUGIN_ROOT}` 경로 변수 지원.  
+  출처: 훅 디버깅 세션(2026-06-20)
+
+- [HIGH] 플러그인 훅 command는 **`bash`/`sh` 대신 `node`(.mjs)로 작성**해야 함  
+  — Windows 환경에서 Claude Code 훅 runner가 `bash`를 찾지 못해 무음 실패.  
+  Node.js는 Windows·macOS·Linux 모두 동작하며 크로스 플랫폼 보장.  
+  파일 확장자는 `.mjs`(ES Module) 권장 — `import` 문법 사용 가능, `package.json` type 설정 무관.  
+  출처: 훅 디버깅 세션(2026-06-20)
+
 ---
 
 ## Advisor 활용 규칙: 런타임이 Claude Code인 경우만 수행  

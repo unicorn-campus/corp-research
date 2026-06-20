@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "corp-research",
   "displayName": "기업정보 리서치팀",
-  "version": "1.0.9",
+  "version": "1.2.1",
   "description": "기업명을 입력받아 OpenDART 공시·웹 검색을 병렬 수집하고 분석 레포트·HTML 대시보드·PPT 슬라이드를 자동 생성하는 단일 기업 심층 분석 플러그인",
   "author": {
     "name": "unicorn-campus"
@@ -18,5 +18,27 @@
     "재무분석",
     "시장조사",
     "pptx"
-  ]
+  ],
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/block-pii.mjs"],
+            "timeout": 15,
+            "statusMessage": "민감정보(카드·주민번호) 검사 중..."
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/block-keyword.mjs"],
+            "timeout": 10,
+            "statusMessage": "사내 보안 정책 주입 중..."
+          }
+        ]
+      }
+    ]
+  }
 }
