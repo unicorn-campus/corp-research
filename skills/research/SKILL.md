@@ -9,6 +9,7 @@ triggers:
   - 기업 조사
   - 리서치
 argument-hint: "[기업명]"
+user-invocable: false
 ---
 
 # Research — 단일 기업 심층 분析 스킬
@@ -18,11 +19,11 @@ argument-hint: "[기업명]"
 | 역할 | 닉네임 | 담당 Phase | 에이전트 파일 |
 |------|--------|------------|-------------|
 | 오케스트레이터 | 클로니 | Phase 1·2·5 (기획·조율·통합) | 메인 (직접 수행) |
-| 재무 分析가 | 다트 | Phase 3-A (OpenDART 공시 데이터 수집) | `.claude/agents/dart-analyst.md` |
-| 시장 조사원 | 서치 | Phase 3-B (WebSearch 시장·경쟁·뉴스 수집) | `.claude/agents/market-researcher.md` |
-| 결과물 작성가 | 라이터 | Phase 4 (레포트·HTML·PPT 생성) | `.claude/agents/report-writer.md` |
+| 재무 分析가 | 다트 | Phase 3-A (OpenDART 공시 데이터 수집) | `${CLAUDE_PLUGIN_ROOT}/agents/dart-analyst.md` |
+| 시장 조사원 | 서치 | Phase 3-B (WebSearch 시장·경쟁·뉴스 수집) | `${CLAUDE_PLUGIN_ROOT}/agents/market-researcher.md` |
+| 결과물 작성가 | 라이터 | Phase 4 (레포트·HTML·PPT 생성) | `${CLAUDE_PLUGIN_ROOT}/agents/report-writer.md` |
 
-> **에이전트 호출 방식**: 각 서브에이전트 호출 시 `.claude/agents/{agent-name}.md` 파일을 읽어  
+> **에이전트 호출 방식**: 각 서브에이전트 호출 시 `${CLAUDE_PLUGIN_ROOT}/agents/{agent-name}.md` 파일을 읽어  
 > 해당 파일의 시스템 프롬프트(frontmatter 이후 내용)를 Agent 도구의 프롬프트에 포함하여 호출.
 
 ---
@@ -76,8 +77,8 @@ AskUserQuestion 도구로 아래 정보를 수집:
 ### Agent 호출 준비
 
 먼저 두 에이전트 파일을 읽어 시스템 프롬프트 확보:
-- `Read .claude/agents/dart-analyst.md` → `{dart_system_prompt}` (frontmatter `---` 이후 전체)
-- `Read .claude/agents/market-researcher.md` → `{search_system_prompt}` (frontmatter `---` 이후 전체)
+- `Read ${CLAUDE_PLUGIN_ROOT}/agents/dart-analyst.md` → `{dart_system_prompt}` (frontmatter `---` 이후 전체)
+- `Read ${CLAUDE_PLUGIN_ROOT}/agents/market-researcher.md` → `{search_system_prompt}` (frontmatter `---` 이후 전체)
 
 ### Phase 3-A. OpenDART 데이터 수집 `[다트 서브에이전트]`
 
@@ -128,7 +129,7 @@ prompt: |
 ## Phase 4. 결과물 생성 `[라이터 서브에이전트]`
 
 먼저 에이전트 파일 읽기:
-- `Read .claude/agents/report-writer.md` → `{writer_system_prompt}` (frontmatter `---` 이후 전체)
+- `Read ${CLAUDE_PLUGIN_ROOT}/agents/report-writer.md` → `{writer_system_prompt}` (frontmatter `---` 이후 전체)
 
 Phase 3 완료 후 Agent 도구로 report-writer 호출:
 
@@ -208,12 +209,12 @@ report-writer 에이전트 반환값 확인 후 사용자에게 보고:
 ## 제약조건
 
 ### MUST
-- Phase 3 Agent 호출 전 `.claude/agents/` 해당 파일을 Read하여 시스템 프롬프트 확보
+- Phase 3 Agent 호출 전 `${CLAUDE_PLUGIN_ROOT}/agents/` 해당 파일을 Read하여 시스템 프롬프트 확보
 - Phase 3-A(다트)와 Phase 3-B(서치)는 단일 응답에서 동시 실행
 - dart-analyst 에이전트는 OpenDART MCP로 실제 데이터 조회 후 반환
 - market-researcher 에이전트는 WebSearch 결과에 출처 URL 반드시 병기
 - HTML 파일은 Chart.js CDN만 사용하여 단일 파일로 완결
-- PPT 생성은 `references/pptx-guide.md` 준수
+- PPT 생성은 `${CLAUDE_PLUGIN_ROOT}/references/pptx-guide.md` 준수
 - report-writer에 dart_data·search_data 전달 시 XML 태그(`<dart_data>`, `<search_data>`) 사용
 - 아젠다 사용자 승인 전까지 Phase 3 시작 금지
 

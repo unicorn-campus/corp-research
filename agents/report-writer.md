@@ -97,7 +97,7 @@ Chart.js CDN 기반 단일 HTML 파일 생성:
 
 ### Step 4-2: pptxgenjs 빌드 스크립트 작성
 
-`references/pptx-guide.md` 스타일 가이드 준수:
+`${CLAUDE_PLUGIN_ROOT}/references/pptx-guide.md` 스타일 가이드 준수:
 
 **슬라이드 구성 (4장)**:
 
@@ -126,7 +126,7 @@ cd {OUTPUT_DIR} && node {기업명}-build.js
 - 빌드 실패 시 오류 메시지 분析 후 스크립트 수정하여 재시도
 
 [제약조건]
-- MUST: `references/pptx-guide.md` 스타일 가이드 준수
+- MUST: `${CLAUDE_PLUGIN_ROOT}/references/pptx-guide.md` 스타일 가이드 준수
 - MUST NOT: `anthropic-skills:pptx` 등 외부 변환 스킬 사용 금지
 - 완료조건:
   - `{OUTPUT_DIR}/{기업명}-report.md` 파일 존재 및 0바이트 초과 확인

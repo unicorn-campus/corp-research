@@ -1,0 +1,22 @@
+{
+  "name": "unicorn-campus",
+  "owner": {
+    "name": "unicorn-campus / corp-research팀"
+  },
+  "description": "unicorn-campus 사내 Claude Code 플러그인 마켓플레이스. 기업정보 리서치 자동화 플러그인을 배포",
+  "plugins": [
+    {
+      "name": "corp-research",
+      "source": "./",
+      "description": "기업명 입력 → OpenDART 공시·웹 검색 병렬 수집 → 분석 레포트·HTML 대시보드·PPT 자동 생성하는 단일 기업 심층 분석 플러그인",
+      "category": "research",
+      "keywords": [
+        "기업분석",
+        "opendart",
+        "리서치",
+        "재무분석",
+        "시장조사"
+      ]
+    }
+  ]
+}

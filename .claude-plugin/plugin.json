@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "corp-research",
+  "displayName": "기업정보 리서치팀",
+  "version": "1.0.8",
+  "description": "기업명을 입력받아 OpenDART 공시·웹 검색을 병렬 수집하고 분석 레포트·HTML 대시보드·PPT 슬라이드를 자동 생성하는 단일 기업 심층 분석 플러그인",
+  "author": {
+    "name": "unicorn-campus"
+  },
+  "homepage": "https://github.com/unicorn-campus/corp-research#readme",
+  "repository": "https://github.com/unicorn-campus/corp-research",
+  "license": "ISC",
+  "keywords": [
+    "corp-research",
+    "기업분석",
+    "opendart",
+    "리서치",
+    "재무분석",
+    "시장조사",
+    "pptx"
+  ]
+}
