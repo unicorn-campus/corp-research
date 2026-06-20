@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/mask-pii.mjs"],
+            "timeout": 10,
+            "statusMessage": "민감정보(카드·주민번호) 검사 중..."
+          },
+          {
+            "type": "command",
+            "command": "bash",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/block-keyword.sh"],
+            "timeout": 10,
+            "statusMessage": "사내 보안 정책 주입 중..."
+          }
+        ]
+      }
+    ]
+  }
+}
